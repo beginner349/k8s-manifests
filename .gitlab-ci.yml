@@ -1,0 +1,29 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - when: never
+
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  image:
+    name: amazon/aws-cli:2.31.13
+    entrypoint: [""]
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: sts.amazonaws.com
+  before_script:
+    - |
+      echo "${GITLAB_OIDC_TOKEN}" > /tmp/web_identity_token
+      export AWS_WEB_IDENTITY_TOKEN_FILE=/tmp/web_identity_token
+      export AWS_ROLE_ARN=${AWS_ROLE_ARN}
+      export AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} # Ensure region is set
+    - KUBECTL_VERSION=v1.35.0
+    - curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+    - chmod +x kubectl
+    - mv kubectl /usr/local/bin/  
+  script:
+    - kubectl version --client
+  when: manual
