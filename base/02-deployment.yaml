@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: beginner349-dev
+  name: deployment-beginner349
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: beginner349-application
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: beginner349-application
+    spec:
+      containers:
+        - image: 542776678091.dkr.ecr.ap-southeast-1.amazonaws.com/beginner349application
+          imagePullPolicy: Always
+          name: beginner349-application
+          ports:
+            - containerPort: 8080
+          env:
+            - name: AWS_REGION
+              value: ap-southeast-1
