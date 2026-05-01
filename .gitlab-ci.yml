@@ -59,3 +59,5 @@ cleanup:
   script:
     - aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name my-eks-cluster
     - kubectl delete ingress ingress-beginner349 -n beginner349-dev
+  when: manual
+  
