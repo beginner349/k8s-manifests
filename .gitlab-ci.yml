@@ -1,7 +1,8 @@
 workflow:
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-    - when: never
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 stages:
   - deploy
@@ -23,7 +24,15 @@ deploy:
     - KUBECTL_VERSION=v1.35.0
     - curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
     - chmod +x kubectl
-    - mv kubectl /usr/local/bin/  
-  script:
+    - mv kubectl /usr/local/bin/
     - kubectl version --client
+  script:
+    - aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name my-eks-cluster
+    - kubectl apply -f base/01-namespace.yaml
+    - kubectl apply -f base/02-deployment.yaml
+    - kubectl apply -f base/03-service.yaml
+    - kubectl apply -f base/04-ingressclassparams.yaml
+    - kubectl apply -f base/05-ingressclass.yaml
+    - kubectl apply -f base/06-ingress.yaml
   when: manual
+ 
