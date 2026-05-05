@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
   - 01-namespace.yaml
   - 02-deployment.yaml
-  - 03-service-yaml
+  - 03-service.yaml
   - 04-ingressclassparams.yaml
   - 05-ingressclass.yaml
   - 06-ingress.yaml
