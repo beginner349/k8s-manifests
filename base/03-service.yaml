@@ -9,4 +9,4 @@ spec:
       targetPort: 8080
       protocol: TCP
   selector:
-    app.kubernetes.io/name: beginner349-application
+    app.kubernetes.io/name: beginner349-app

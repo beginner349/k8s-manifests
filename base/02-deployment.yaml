@@ -6,17 +6,17 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: beginner349-application
+      app.kubernetes.io/name: beginner349-app
   replicas: 3
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: beginner349-application
+        app.kubernetes.io/name: beginner349-app
     spec:
       containers:
-        - image: 542776678091.dkr.ecr.ap-southeast-1.amazonaws.com/beginner349application
+        - image: spring-boot-app
           imagePullPolicy: Always
-          name: beginner349-application
+          name: beginner349-app
           ports:
             - containerPort: 8080
           env:
