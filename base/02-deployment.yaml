@@ -13,6 +13,7 @@ spec:
       labels:
         app.kubernetes.io/name: beginner349-app
     spec:
+      serviceAccountName: beginner349-sa
       containers:
         - image: spring-boot-app
           imagePullPolicy: Always
