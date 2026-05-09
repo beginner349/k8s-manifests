@@ -19,6 +19,8 @@ The deployment is composed of the following components, orchestrated via **Kusto
     - **IngressClassParams (`04-ingressclassparams.yaml`)**: Configures the ALB to be `internet-facing`.
     - **IngressClass (`05-ingressclass.yaml`)**: Sets `alb` as the default ingress class for the cluster, powered by the `eks.amazonaws.com/alb` controller.
     - **Ingress (`06-ingress.yaml`)**: Defines the routing rules, directing all traffic (`/*`) to the backend service.
+* **Service account (`07-serviceaccount.yaml`)**: 
+
 
 ## Deployment Instructions
 
@@ -45,3 +47,10 @@ A manual deployment workflow is available for automated updates via GitHub Actio
 | ALB Scheme  | `internet-facing` |
 | Target Type | `ip`              |
 | AWS Region  | `ap-southeast-1`  |
+
+## TODO
+- [x] Setting Up OpenID Connect (OIDC) in AWS for GitHub Actions
+- [ ] Implement Kustomize overlays for environment-specific configurations
+- [ ] Implement TLS/SSL for the ingress with a custom domain using ExternalDNS and Route 53
+- [ ] Install and configure ArgoCD for GitOps in EKS
+- [ ] Install and configure Prometheus and Grafana in EKS
