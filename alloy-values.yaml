@@ -1,0 +1,49 @@
+alloy:
+  extraPorts:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+  extraEnv:
+    - name: GRAFANA_CLOUD_OTLPHTTP_ENDPOINT
+      value: "https://otlp-gateway-prod-ap-southeast-1.grafana.net/otlp"
+    - name: GRAFANA_CLOUD_INSTANCE_ID
+      value: "1644684"
+    - name: GRAFANA_CLOUD_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: alloy-grafana-credentials
+          key: grafana-api-token
+
+  configMap:
+    content: |
+      // 1. Listen for standard OpenTelemetry data from your Spring Boot App
+      otelcol.receiver.otlp "default" {
+        grpc {
+          endpoint = "0.0.0.0:4317"
+        }
+        http {
+          endpoint = "0.0.0.0:4318"
+        }
+        output {
+          metrics = [otelcol.exporter.otlphttp.grafana_cloud.input]
+          logs    = [otelcol.exporter.otlphttp.grafana_cloud.input]
+          traces  = [otelcol.exporter.otlphttp.grafana_cloud.input]
+        }
+      }
+
+      // 2. Configure Basic Authentication for Grafana Cloud OTLP Gateway
+      otelcol.auth.basic "grafana_cloud" {
+        username = sys.env("GRAFANA_CLOUD_INSTANCE_ID")
+        password = sys.env("GRAFANA_CLOUD_API_KEY")
+      }
+
+      // 3. Export all aggregated telemetry to the unified Grafana Cloud OTLP Gateway
+      otelcol.exporter.otlphttp "grafana_cloud" {
+        client {
+          endpoint = sys.env("GRAFANA_CLOUD_OTLPHTTP_ENDPOINT")
+          auth     = otelcol.auth.basic.grafana_cloud.handler
+        }
+      }

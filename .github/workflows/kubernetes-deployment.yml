@@ -31,8 +31,57 @@ jobs:
         run: |
           aws eks update-kubeconfig --region ${{ vars.AWS_DEFAULT_REGION }} --name my-eks-cluster
 
+      - name: Install Helm
+        uses: azure/setup-helm@v5.0.0
+        with:
+          version: 'v4.2.0'
+
+      - name: Add Helm repos
+        run: |
+          helm repo add external-secrets https://charts.external-secrets.io
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo update
+
+      - name: Apply External Secrets Service Account
+        run: |
+          kubectl apply -f external-secrets-sa.yaml
+
+      - name: Install/Upgrade External Secrets Operator
+        run: |
+          helm upgrade --install external-secrets \
+            external-secrets/external-secrets \
+            --namespace external-secrets \
+            --create-namespace \
+            --set installCRDs=true \
+            --set serviceAccount.create=false \
+            --set serviceAccount.name="external-secrets-sa" \
+            --wait
+
+      - name: Apply External Secrets resources
+        run: |
+          kubectl apply -f cluster-secret-store.yaml
+          kubectl apply -f monitoring-namespace.yaml
+          kubectl apply -f external-secret.yaml
+
+          echo "=== Waiting for ExternalSecret to be Ready ==="
+          kubectl wait externalsecret alloy-grafana-credentials \
+            --namespace monitoring \
+            --for=condition=Ready \
+            --timeout=60s
+
+          echo "=== Confirm secret was created ==="
+          kubectl get secret alloy-grafana-credentials -n monitoring
+
+      - name: Install/Upgrade Grafana Alloy
+        run: |
+          helm upgrade --install grafana-alloy \
+            grafana/alloy \
+            --namespace monitoring \
+            -f alloy-values.yaml \
+            --wait
+
       - name: Deploy with Kustomize
         run: |
             cd base
             kustomize edit set image spring-boot-app=${{ vars.AWS_ECR }}/beginner349-app:${{ vars.IMAGE_TAG }}
-            kustomize build | kubectl apply -k .
+            kubectl apply -k .
