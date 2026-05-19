@@ -51,7 +51,7 @@ jobs:
         run: |
           helm upgrade --install external-secrets \
             external-secrets/external-secrets \
-            --namespace external-secrets \            
+            --namespace external-secrets \
             --set installCRDs=true \
             --set serviceAccount.create=false \
             --set serviceAccount.name="external-secrets-sa" \
