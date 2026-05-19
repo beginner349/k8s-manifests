@@ -49,16 +49,21 @@ jobs:
 
       - name: Install/Upgrade External Secrets Operator
         run: |
+          helm uninstall external-secrets -n external-secrets
           helm upgrade --install external-secrets \
             external-secrets/external-secrets \
             --namespace external-secrets \
             --set installCRDs=true \
             --set serviceAccount.create=false \
-            --set serviceAccount.name="external-secrets-sa" \
-            --wait
+            --set serviceAccount.name="external-secrets-sa"            
 
       - name: Apply External Secrets resources
         run: |
+          kubectl wait \
+            --for condition=Established \
+            crd/clustersecretstores.external-secrets.io \
+            --timeout=60s
+          kubectl get crd | grep external-secrets            
           kubectl apply -f cluster-secret-store.yaml          
           kubectl apply -f external-secret.yaml
 
