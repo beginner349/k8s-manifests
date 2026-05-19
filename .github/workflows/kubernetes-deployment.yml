@@ -44,14 +44,14 @@ jobs:
 
       - name: Apply External Secrets Service Account
         run: |
+          kubectl apply -f monitoring-namespace.yaml
           kubectl apply -f external-secrets-sa.yaml
 
       - name: Install/Upgrade External Secrets Operator
         run: |
           helm upgrade --install external-secrets \
             external-secrets/external-secrets \
-            --namespace external-secrets \
-            --create-namespace \
+            --namespace external-secrets \            
             --set installCRDs=true \
             --set serviceAccount.create=false \
             --set serviceAccount.name="external-secrets-sa" \
@@ -59,8 +59,7 @@ jobs:
 
       - name: Apply External Secrets resources
         run: |
-          kubectl apply -f cluster-secret-store.yaml
-          kubectl apply -f monitoring-namespace.yaml
+          kubectl apply -f cluster-secret-store.yaml          
           kubectl apply -f external-secret.yaml
 
           echo "=== Waiting for ExternalSecret to be Ready ==="
