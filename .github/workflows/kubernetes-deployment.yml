@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  deploy:  
+  deploy:
     runs-on: ubuntu-latest
   
     steps:
@@ -55,21 +55,8 @@ jobs:
             --namespace external-secrets \
             --set installCRDs=true \
             --set serviceAccount.create=false \
-            --set serviceAccount.name="external-secrets-sa"            
-
-      - name: Wait for ESO CRDs to be established
-        run: |
-          kubectl wait --for=condition=established \
-            crd/clustersecretstores.external-secrets.io \
-            --timeout=60s
-          kubectl wait --for=condition=established \
-            crd/externalsecrets.external-secrets.io \
-            --timeout=60s
-          kubectl wait deployment/external-secrets-webhook \
-            -n external-secrets \
-            --for=condition=Available \
-            --timeout=120s
-          kubectl get crd | grep external-secrets
+            --set serviceAccount.name="external-secrets-sa" \
+            --wait
 
       - name: Apply External Secrets resources
         run: |
