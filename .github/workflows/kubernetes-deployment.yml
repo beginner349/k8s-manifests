@@ -48,8 +48,7 @@ jobs:
           kubectl apply -f external-secrets-sa.yaml
 
       - name: Install/Upgrade External Secrets Operator
-        run: |
-          helm uninstall external-secrets -n external-secrets
+        run: |          
           helm upgrade --install external-secrets \
             external-secrets/external-secrets \
             --namespace external-secrets \
