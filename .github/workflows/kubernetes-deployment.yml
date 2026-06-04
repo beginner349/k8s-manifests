@@ -31,6 +31,12 @@ jobs:
         run: |
           aws eks update-kubeconfig --region ${{ vars.AWS_DEFAULT_REGION }} --name my-eks-cluster
 
+      - name: Deploy with Kustomize
+        run: |
+            cd base
+            kustomize edit set image spring-boot-app=${{ vars.AWS_ECR }}/beginner349-app:${{ vars.IMAGE_TAG }}
+            kubectl apply -k .
+
       - name: Install Helm
         uses: azure/setup-helm@v5.0.0
         with:
@@ -48,7 +54,7 @@ jobs:
           kubectl apply -f external-secrets-sa.yaml
 
       - name: Install/Upgrade External Secrets Operator
-        run: |          
+        run: |
           helm upgrade --install external-secrets \
             external-secrets/external-secrets \
             --namespace external-secrets \
@@ -78,9 +84,3 @@ jobs:
             --namespace monitoring \
             -f alloy-values.yaml \
             --wait
-
-      - name: Deploy with Kustomize
-        run: |
-            cd base
-            kustomize edit set image spring-boot-app=${{ vars.AWS_ECR }}/beginner349-app:${{ vars.IMAGE_TAG }}
-            kubectl apply -k .
