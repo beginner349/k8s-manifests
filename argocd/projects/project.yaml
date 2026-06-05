@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: beginner349
+  namespace: argocd
+spec:
+  description: beginner349 platform stack
+  sourceRepos:
+    - 'https://github.com/beginner349/k8s-manifests.git'
+    - 'https://charts.external-secrets.io'
+    - 'https://grafana.github.io/helm-charts'
+  destinations:
+    - server: 'https://kubernetes.default.svc'
+      namespace: argocd
+    - server: 'https://kubernetes.default.svc'
+      namespace: beginner349-dev
+    - server: 'https://kubernetes.default.svc'
+      namespace: monitoring
+    - server: 'https://kubernetes.default.svc'
+      namespace: external-secrets
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'

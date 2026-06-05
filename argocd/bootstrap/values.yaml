@@ -1,0 +1,7 @@
+configs:
+  params:
+    server.insecure: true   # avoids the redirect loop
+
+server:
+  service:
+    type: LoadBalancer

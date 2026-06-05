@@ -9,4 +9,8 @@ resources:
   - 04-ingressclassparams.yaml
   - 05-ingressclass.yaml
   - 06-ingress.yaml
-  
+
+images:
+  - name: spring-boot-app
+    newName: 542776678091.dkr.ecr.ap-southeast-1.amazonaws.com/beginner349-app
+    newTag: 1d7e1ff6c7a8f4246276b3ecd7bc5ca0dbf52b16
