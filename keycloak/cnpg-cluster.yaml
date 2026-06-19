@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 spec:
-  instances: 2               # replicas across AZs
+  instances: 1
   storage:
     storageClass: aws-ebs-gp3
     size: 10Gi
@@ -14,26 +14,26 @@ spec:
     initdb:
       database: keycloak
       owner: keycloak
-  serviceAccountTemplate:
-    metadata:
-      annotations:
-        eks.amazonaws.com/role-arn: 'arn:aws:iam::542776678091:role/cnpg-backup-irsa'
-  backup:
-    barmanObjectStore:
-      destinationPath: 's3://dev-keycloak-cnpg-backups-542776678091-ap-southeast-1-an/'
-      s3Credentials:
-        inheritFromIAMRole: true
-    retentionPolicy: "7d"
----
-apiVersion: postgresql.cnpg.io/v1
-kind: ScheduledBackup
-metadata:
-  name: keycloak-db-daily
-  namespace: keycloak
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-spec:
-  schedule: "0 0 3 * * *"
-  backupOwnerReference: self
-  cluster:
-    name: "keycloak-db"
+#   serviceAccountTemplate:
+#     metadata:
+#       annotations:
+#         eks.amazonaws.com/role-arn: 'arn:aws:iam::542776678091:role/cnpg-backup-irsa'
+#   backup:
+#     barmanObjectStore:
+#       destinationPath: 's3://dev-keycloak-cnpg-backups-542776678091-ap-southeast-1-an/'
+#       s3Credentials:
+#         inheritFromIAMRole: true
+#     retentionPolicy: "7d"
+# ---
+# apiVersion: postgresql.cnpg.io/v1
+# kind: ScheduledBackup
+# metadata:
+#   name: keycloak-db-daily
+#   namespace: keycloak
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "2"
+# spec:
+#   schedule: "0 0 3 * * *"
+#   backupOwnerReference: self
+#   cluster:
+#     name: "keycloak-db"
