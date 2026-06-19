@@ -1,19 +1,37 @@
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: keycloak-db          # → SA "keycloak-db", secret "keycloak-db-app", svc "keycloak-db-rw"
+  name: cnpg-keycloak  # → service account = "cnpg-keycloak", secret "cnpg-keycloak-app", svc "cnpg-keycloak-rw", CA certificate = "cnpg-keycloak-ca"
   namespace: keycloak
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 spec:
-  instances: 1
+  instances: 3
+
   storage:
     storageClass: aws-ebs-gp3
     size: 10Gi
+
+  affinity:
+    podAntiAffinityType: required
+    topologyKey: topology.kubernetes.io/zone
+
+  postgresql:
+    synchronous:
+      method: any
+      number: 1
+    parameters:
+      max_connections: "100"
+
   bootstrap:
     initdb:
       database: keycloak
       owner: keycloak
+
+  managed:
+    services:
+      disabledDefaultServices: ["ro", "r"]
+
 #   serviceAccountTemplate:
 #     metadata:
 #       annotations:
