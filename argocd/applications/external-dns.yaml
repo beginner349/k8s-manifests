@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: external-dns
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: beginner349
+  source:
+    repoURL: 'https://kubernetes-sigs.github.io/external-dns/'
+    chart: external-dns
+    targetRevision: 1.21.1
+    helm:
+      valuesObject:
+        # for the available values, refer to https://artifacthub.io/packages/helm/external-dns/external-dns
+        provider:
+          name: aws
+        serviceAccount:
+          name: external-dns-sa
+          annotations:
+            eks.amazonaws.com/role-arn: 'arn:aws:iam::542776678091:role/external-dns-irsa'
+        domainFilters:
+          - beginner349.com
+        policy: sync
+        txtOwnerId: beginner349-dev
+        sources:
+          - ingress
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: external-dns
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

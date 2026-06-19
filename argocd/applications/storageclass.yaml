@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: storageclass
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: beginner349
+  source:
+    repoURL: https://github.com/beginner349/k8s-manifests.git
+    path: infra
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    # namespace not required since StorageClass is cluster level resource
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

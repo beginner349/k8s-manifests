@@ -101,5 +101,6 @@ The ArgoCD server is reachable over a public NLB; log in as `admin` with the pri
 - [x] Setting Up OpenID Connect (OIDC) in AWS for GitHub Actions
 - [x] add Grafana Alloy + ESO charts for Grafana Cloud telemetry on EKS
 - [x] Install and configure ArgoCD for GitOps in EKS
-- [ ] Implement Kustomize overlays for environment-specific configurations
+- [ ] Deploy Keycloak Operator on EKS backed by CloudNativePG
 - [ ] Implement TLS/SSL for the spring boot ingress with a custom domain using ExternalDNS and Route 53
+- [ ] Implement Kustomize overlays for environment-specific configurations

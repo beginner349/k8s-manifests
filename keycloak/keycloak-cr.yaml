@@ -1,0 +1,28 @@
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  name: keycloak            # → service "keycloak-service", admin secret "keycloak-initial-admin"
+  namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  instances: 1
+  db:
+    vendor: postgres
+    host: keycloak-db-rw     # CNPG read-write service
+    port: 5432
+    database: keycloak
+    usernameSecret:
+      name: keycloak-db-app
+      key: username
+    passwordSecret:
+      name: keycloak-db-app
+      key: password
+  hostname:
+    hostname: https://auth.beginner349.com
+  proxy:
+    headers: xforwarded      # TLS terminates at the ALB
+  http:
+    httpEnabled: true        # Keycloak serves plain HTTP behind the ALB
+  ingress:
+    enabled: false           # we bring our own ALB Ingress below
