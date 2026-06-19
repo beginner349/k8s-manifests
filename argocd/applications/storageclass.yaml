@@ -13,7 +13,8 @@ spec:
     targetRevision: main
   destination:
     server: https://kubernetes.default.svc
-    # namespace not required since StorageClass is cluster level resource
+    # just set a namespace that is allowed from the project.yaml, it doesnt matter since StorageClass is cluster level resource
+    namespace: argocd
   syncPolicy:
     automated:
       prune: true
