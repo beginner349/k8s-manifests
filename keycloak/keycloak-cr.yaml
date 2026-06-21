@@ -18,9 +18,9 @@ spec:
   db:
     vendor: postgres
     host: cnpg-keycloak-rw.keycloak.svc.cluster.local   # FQDN: must match a cert SAN for verify-server
-    poolMinSize: 30
-    poolInitialSize: 30
-    poolMaxSize: 30
+    poolMinSize: 5
+    poolInitialSize: 5
+    poolMaxSize: 15
     usernameSecret:
       name: cnpg-keycloak-app
       key: username
