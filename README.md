@@ -2,7 +2,7 @@
 
 [![Deploy to EKS](https://github.com/beginner349/k8s-manifests/actions/workflows/kubernetes-deployment.yml/badge.svg)](https://github.com/beginner349/k8s-manifests/actions/workflows/kubernetes-deployment.yml)
 
-This repository contains the Kubernetes manifests and GitOps configuration that deploy the **beginner349-app** (a Spring Boot service) to an Amazon EKS cluster running **EKS Auto Mode** with the **AWS Load Balancer Controller** for ingress. Deployment is driven by **ArgoCD** using the **app-of-apps** pattern: a CI workflow bootstraps ArgoCD, and ArgoCD then reconciles the whole stack from this repo — the app, the **External Secrets Operator (ESO)** (syncing credentials from **AWS Secrets Manager**), and **Grafana Alloy** (forwarding OTLP telemetry to **Grafana Cloud**).
+This repository contains the Kubernetes manifests and GitOps configuration that deploy the **beginner349-app** (a Spring Boot service) to an Amazon EKS cluster running **EKS Auto Mode** with the **AWS Load Balancer Controller** for ingress. Deployment is driven by **ArgoCD** using the **app-of-apps** pattern: a CI workflow bootstraps ArgoCD, and ArgoCD then reconciles the whole stack from this repo — the app, the **External Secrets Operator (ESO)** (syncing credentials from **AWS Secrets Manager**), **Grafana Alloy** (forwarding OTLP telemetry to **Grafana Cloud**), a self-hosted **Keycloak** (via the Keycloak Operator) backed by a **CloudNativePG** Postgres cluster with S3 backups, **external-dns** (managing **Route 53** records), and a gp3 **StorageClass**.
 
 ## Project Overview
 
@@ -32,10 +32,15 @@ The application deployment is composed of the following components under `base/`
 | `argocd/bootstrap/values.yaml`                | Helm values | ArgoCD install values: `server.insecure`, public NLB for the server      |
 | `argocd/applications/external-secrets.yaml`   | Application | ESO Helm chart (wave 0); SA with IRSA annotation                         |
 | `argocd/applications/spring-boot-app.yaml`    | Application | Kustomize `base/` (wave 0)                                               |
+| `argocd/applications/storageclass.yaml`       | Application | `infra/` `aws-ebs-gp3` StorageClass (wave 0)                             |
+| `argocd/applications/cnpg-operator.yaml`      | Application | CloudNativePG operator Helm chart, ns `cnpg-system` (wave 0)            |
+| `argocd/applications/keycloak-operator.yaml`  | Application | Keycloak Operator (remote Kustomize base), ns `keycloak` (wave 0)        |
+| `argocd/applications/external-dns.yaml`       | Application | external-dns Helm chart (Route 53), ns `external-dns` (wave 0)           |
 | `argocd/applications/secret-resources.yaml`   | Application | `secrets/` ClusterSecretStore + ExternalSecret (wave 1)                  |
+| `argocd/applications/keycloak.yaml`           | Application | `keycloak/` CNPG `Cluster` + Keycloak CR + Ingress (wave 1)              |
 | `argocd/applications/grafana-alloy.yaml`      | Application |  Alloy chart + `alloy-values.yaml` (wave 2)                              |
 
-wave 0 = ESO operator + app; wave 1 = secret resources (ClusterSecretStore/ExternalSecret, needs ESO CRDs first); wave 2 = Alloy (needs the synced `alloy-grafana-credentials` Secret). All child apps use `automated` sync with `prune` + `selfHeal`.
+wave 0 = operators + base infra (ESO, app, StorageClass, CloudNativePG operator, Keycloak Operator, external-dns); wave 1 = resources that depend on those operators/CRDs (secret resources, plus the CNPG `Cluster` + Keycloak CR + ingress); wave 2 = Alloy (needs the synced `alloy-grafana-credentials` Secret). All child apps use `automated` sync with `prune` + `selfHeal`.
 
 ## Observability & Secrets Management
 
@@ -56,6 +61,22 @@ Telemetry from the Spring Boot app is shipped to Grafana Cloud, with the Grafana
 - `grafana/alloy` — namespace `monitoring`
 
 > Real values (IRSA role ARN, AWS account, Grafana instance ID / OTLP endpoint, and the Secrets Manager key `dev/grafana-cloud/api-token`) live in the manifests listed above.
+
+## Database & Keycloak (CloudNativePG)
+
+A self-hosted **Keycloak** runs in the `keycloak` namespace, backed by a Postgres cluster managed by **CloudNativePG (CNPG)**. The CNPG operator runs in `cnpg-system`; the `Cluster` `cnpg-keycloak` (3 instances, synchronous replication, zone anti-affinity, 10Gi on the `aws-ebs-gp3` StorageClass) bootstraps the `keycloak` database. Backups go to **S3** via barman, authenticated by IRSA (`inheritFromIAMRole`) with 7-day retention, plus a daily `ScheduledBackup`.
+
+Keycloak (deployed via the **Keycloak Operator** CR) connects to the `cnpg-keycloak-rw` service over TLS (`verify-server`), using the operator-generated `cnpg-keycloak-app` secret for credentials and the `cnpg-keycloak-ca` truststore. It's exposed via an ALB `Ingress` at `https://auth.beginner349.com` (ACM cert, HTTP→HTTPS redirect, health check on port `9000` `/health/ready`); the DNS record is managed by **external-dns** against the `beginner349.com` hosted zone.
+
+| Manifest                       | Purpose                                                                       |
+|--------------------------------|-------------------------------------------------------------------------------|
+| `infra/storageclass-gp3.yaml`  | `aws-ebs-gp3` StorageClass (encrypted gp3, `WaitForFirstConsumer`).           |
+| `keycloak-operator/`           | Kustomize remote base installing the Keycloak Operator + CRDs.                |
+| `keycloak/cnpg-cluster.yaml`   | CNPG `Cluster` `cnpg-keycloak` + daily `ScheduledBackup` (S3 via IRSA).       |
+| `keycloak/keycloak-cr.yaml`    | Keycloak CR; points at `cnpg-keycloak-rw` with TLS `verify-server`.           |
+| `keycloak/ingress.yaml`        | ALB Ingress for `auth.beginner349.com` (ACM TLS, HTTP→HTTPS).                 |
+
+> **Note:** CloudNativePG is the current database. A migration to **Aurora Postgres** is planned.
 
 ## Deployment Instructions
 
@@ -92,6 +113,13 @@ The ArgoCD server is reachable over a public NLB; log in as `admin` with the pri
 | AWS Region                | `ap-southeast-1`                 |
 | Monitoring namespace      | `monitoring`                     |
 | ESO namespace             | `external-secrets`               |
+| Keycloak namespace        | `keycloak`                       |
+| CNPG operator namespace   | `cnpg-system`                    |
+| external-dns namespace    | `external-dns`                   |
+| StorageClass              | `aws-ebs-gp3` (encrypted gp3)    |
+| CNPG instances            | 3                                |
+| DB backups                | S3 (barman, IRSA), 7d retention  |
+| Keycloak hostname         | `auth.beginner349.com`           |
 | OTLP ports                | `4317` (gRPC) / `4318` (HTTP)    |
 | Telemetry backend         | Grafana Cloud (OTLP)             |
 | ArgoCD namespace          | argocd                           |
@@ -101,6 +129,7 @@ The ArgoCD server is reachable over a public NLB; log in as `admin` with the pri
 - [x] Setting Up OpenID Connect (OIDC) in AWS for GitHub Actions
 - [x] add Grafana Alloy + ESO charts for Grafana Cloud telemetry on EKS
 - [x] Install and configure ArgoCD for GitOps in EKS
-- [ ] Deploy Keycloak Operator on EKS backed by CloudNativePG
-- [ ] Implement TLS/SSL for the spring boot ingress with a custom domain using ExternalDNS and Route 53
+- [x] Deploy Keycloak Operator on EKS backed by CloudNativePG
+- [ ] Migrate Keycloak database from CloudNativePG to Aurora Postgres
+- [ ] Implement TLS/SSL for the spring boot ingress with a custom domain using ExternalDNS and Route 53 (external-dns + Route 53 + ACM are now in place for Keycloak; reuse for the app ingress)
 - [ ] Implement Kustomize overlays for environment-specific configurations
