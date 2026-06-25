@@ -17,9 +17,7 @@ spec:
       memory: "2250M"
   db:
     vendor: postgres
-    host: keycloak-db.cluster-c7oa4icsqutl.ap-southeast-1.rds.amazonaws.com
-    port: 5432
-    database: keycloak
+    url: jdbc:postgresql://keycloak-db.cluster-c7oa4icsqutl.ap-southeast-1.rds.amazonaws.com:5432/keycloak
     poolMinSize: 5
     poolInitialSize: 5
     poolMaxSize: 15
