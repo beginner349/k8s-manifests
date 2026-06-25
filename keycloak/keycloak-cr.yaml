@@ -17,7 +17,7 @@ spec:
       memory: "2250M"
   db:
     vendor: postgres
-    host: jdbc:aws-wrapper:postgresql://keycloak-db.cluster-c7oa4icsqutl.ap-southeast-1.rds.amazonaws.com:5432/keycloak
+    host: keycloak-db.cluster-c7oa4icsqutl.ap-southeast-1.rds.amazonaws.com:5432/keycloak
     poolMinSize: 5
     poolInitialSize: 5
     poolMaxSize: 15
@@ -28,8 +28,6 @@ spec:
       name: keycloak-db-credentials
       key: password
   additionalOptions:
-    - name: db-driver
-      value: software.amazon.jdbc.Driver
     - name: db-tls-mode
       value: verify-server  # turns on TLS + server-cert verification using the truststore below
   http:
