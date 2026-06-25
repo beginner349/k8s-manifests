@@ -17,26 +17,28 @@ spec:
       memory: "2250M"
   db:
     vendor: postgres
-    host: cnpg-keycloak-rw.keycloak.svc.cluster.local   # FQDN: must match a cert SAN for verify-server
+    host: jdbc:aws-wrapper:postgresql://keycloak-db.cluster-c7oa4icsqutl.ap-southeast-1.rds.amazonaws.com:5432/keycloak
     poolMinSize: 5
     poolInitialSize: 5
     poolMaxSize: 15
     usernameSecret:
-      name: cnpg-keycloak-app
+      name: keycloak-db-credentials
       key: username
     passwordSecret:
-      name: cnpg-keycloak-app
+      name: keycloak-db-credentials
       key: password
   additionalOptions:
+    - name: db-driver
+      value: software.amazon.jdbc.Driver
     - name: db-tls-mode
       value: verify-server  # turns on TLS + server-cert verification using the truststore below
   http:
     httpEnabled: true
   instances: 3
   truststores:
-    cnpg:
-      secret:
-        name: cnpg-keycloak-ca
+    aurora:
+      configMap:
+        name: rds-ca-bundle
   proxy:
     headers: xforwarded      # TLS terminates at the ALB
   ingress:
