@@ -21,5 +21,13 @@ spec:
           ports:
             - containerPort: 8080
           env:
+            - name: JWT_ISSUER_URI
+              value: https://auth.beginner349.com/realms/myrealm
+            - name: OTLP_METRICS_ENDPOINT
+              value: http://grafana-alloy.monitoring.svc.cluster.local:4318/v1/metrics
+            - name: OTLP_TRACES_ENDPOINT
+              value: http://grafana-alloy.monitoring.svc.cluster.local:4318/v1/traces
+            - name: OTLP_LOGS_ENDPOINT
+              value: http://grafana-alloy.monitoring.svc.cluster.local:4318/v1/logs
             - name: AWS_REGION
               value: ap-southeast-1
