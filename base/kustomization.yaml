@@ -13,4 +13,4 @@ resources:
 images:
 - name: spring-boot-app
   newName: 542776678091.dkr.ecr.ap-southeast-1.amazonaws.com/beginner349-app
-  newTag: 55a6362f18ef451a0282ab8e9aca2fd423eb5ab7
+  newTag: 535470b4abcad60945da652ebe0bbe24a1d2a61c
