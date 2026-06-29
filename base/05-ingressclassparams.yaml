@@ -1,0 +1,7 @@
+apiVersion: eks.amazonaws.com/v1
+kind: IngressClassParams
+metadata:
+  name: alb
+spec:
+  # IngressClassParams specification can be found in https://kubernetes-sigs.github.io/aws-load-balancer-controller/v3.4/guide/ingress/ingress_class/
+  scheme: internet-facing
