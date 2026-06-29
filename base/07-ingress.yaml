@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: beginner349-dev
+  name: ingress-beginner349
+  annotations:
+    # related annotations can be found in https://kubernetes-sigs.github.io/aws-load-balancer-controller/v3.4/guide/ingress/annotations/  
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/certificate-arn: 'arn:aws:acm:ap-southeast-1:542776678091:certificate/b2b4b8c3-d72b-4add-b83c-2659667e5491'
+    alb.ingress.kubernetes.io/healthcheck-port: '8080'
+    alb.ingress.kubernetes.io/healthcheck-path: /actuator/health/readiness
+spec:
+  # this matches the name of IngressClass.
+  # this can be omitted if you have a default ingressClass in cluster: the one with ingressclass.kubernetes.io/is-default-class: "true"  annotation
+  ingressClassName: alb
+  rules:
+    - host: api.beginner349.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: service-beginner349
+                port:
+                  number: 80

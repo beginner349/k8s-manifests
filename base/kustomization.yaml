@@ -3,14 +3,15 @@ kind: Kustomization
 
 resources:
 - 01-namespace.yaml
-- 07-serviceaccount.yaml
-- 02-deployment.yaml
-- 03-service.yaml
-- 04-ingressclassparams.yaml
-- 05-ingressclass.yaml
-- 06-ingress.yaml
+- 02-serviceaccount.yaml
+- 03-deployment.yaml
+- 04-service.yaml
+# IngressClassParams and IngressClass are cluster-level resources, so techncally they don't belong to any application
+- 05-ingressclassparams.yaml
+- 06-ingressclass.yaml
+- 07-ingress.yaml
 
 images:
 - name: spring-boot-app
   newName: 542776678091.dkr.ecr.ap-southeast-1.amazonaws.com/beginner349-app
-  newTag: 535470b4abcad60945da652ebe0bbe24a1d2a61c
+  newTag: 7cb0ed7949b48db43f5a4fd1f09f097ef233f0b3
