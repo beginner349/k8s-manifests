@@ -13,13 +13,13 @@ The configuration sets up a complete environment including namespace isolation, 
 The application deployment is composed of the following components under `base/`, orchestrated via **Kustomize**:
 
 * **Namespace (`base/01-namespace.yaml`)**: Creates the `beginner349-dev` environment to isolate project resources.
-* **Deployment (`base/02-deployment.yaml`)**: Manages 3 replicas of the `spring-boot-app`. It is configured for the `ap-southeast-1` region and exposes port `8080`.
-* **Service (`base/03-service.yaml`)**: An internal service named `service-beginner349` that routes traffic on port `80` to the application's port `8080`.
+* **ServiceAccount (`base/02-serviceaccount.yaml`)**: IRSA-annotated service account assumed by the application pods.
+* **Deployment (`base/03-deployment.yaml`)**: Manages 3 replicas of the `spring-boot-app`. It is configured for the `ap-southeast-1` region and exposes port `8080`.
+* **Service (`base/04-service.yaml`)**: An internal service named `service-beginner349` that routes traffic on port `80` to the application's port `8080`.
 * **Ingress Configuration**:
-    - **IngressClassParams (`base/04-ingressclassparams.yaml`)**: Configures the ALB to be `internet-facing`.
-    - **IngressClass (`base/05-ingressclass.yaml`)**: Sets `alb` as the default ingress class for the cluster, powered by the `eks.amazonaws.com/alb` controller.
-    - **Ingress (`base/06-ingress.yaml`)**: Defines the routing rules, directing all traffic (`/*`) to the backend service.
-* **ServiceAccount (`base/07-serviceaccount.yaml`)**: IRSA-annotated service account assumed by the application pods.
+    - **IngressClassParams (`base/05-ingressclassparams.yaml`)**: Configures the ALB to be `internet-facing`.
+    - **IngressClass (`base/06-ingressclass.yaml`)**: Sets `alb` as the default ingress class for the cluster, powered by the `eks.amazonaws.com/alb` controller.
+    - **Ingress (`base/07-ingress.yaml`)**: Exposes the app via an ALB at `https://api.beginner349.com` — wildcard ACM cert (`*.beginner349.com`), HTTP→HTTPS redirect, `ip` target type, health check on port `8080` `/actuator/health/readiness`, routing to `service-beginner349`. external-dns manages the Route 53 record against the `beginner349.com` hosted zone.
 
 ## GitOps with ArgoCD (app-of-apps)
 
@@ -68,7 +68,7 @@ On first sync the realm is bootstrapped declaratively via a **`KeycloakRealmImpo
 
 | Manifest                          | Purpose                                                                           |
 |-----------------------------------|-----------------------------------------------------------------------------------|
-| `keycloak-operator/`              | Kustomize remote base installing the Keycloak Operator + CRDs (v26.6.3).          |
+| `keycloak/operator/`              | Kustomize remote base installing the Keycloak Operator + CRDs (v26.6.3).          |
 | `keycloak/db-external-secret.yaml`| `ExternalSecret` syncing the RDS master creds → `keycloak-db-credentials` Secret. |
 | `keycloak/rds-ca-bundle.yaml`     | `ConfigMap` with the Amazon RDS CA bundle (used for `verify-server` TLS).         |
 | `keycloak/keycloak-cr.yaml`       | Keycloak CR; Aurora JDBC URL, TLS `verify-server`, 3 instances.                   |
@@ -108,6 +108,7 @@ The ArgoCD server is reachable over a public NLB; log in as `admin` with the pri
 | Replicas                  | 3                                |
 | ALB Scheme                | `internet-facing`                |
 | Target Type               | `ip`                             |
+| App hostname              | `api.beginner349.com`            |
 | AWS Region                | `ap-southeast-1`                 |
 | Monitoring namespace      | `monitoring`                     |
 | ESO namespace             | `external-secrets`               |
@@ -129,5 +130,5 @@ The ArgoCD server is reachable over a public NLB; log in as `admin` with the pri
 - [x] Deploy Keycloak Operator on EKS
 - [x] Migrate Keycloak database from CloudNativePG to Aurora Postgres
 - [x] Automate Keycloak realm/client/user provisioning via `KeycloakRealmImport`
-- [ ] Implement TLS/SSL for the spring boot ingress with a custom domain using ExternalDNS and Route 53 (external-dns + Route 53 + ACM are now in place for Keycloak; reuse for the app ingress)
+- [x] Implement TLS/SSL for the spring boot ingress with a custom domain using ExternalDNS and Route 53 (external-dns + Route 53 + ACM are now in place for Keycloak; reuse for the app ingress)
 - [ ] Implement Kustomize overlays for environment-specific configurations
